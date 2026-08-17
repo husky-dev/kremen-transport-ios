@@ -6,11 +6,16 @@ import Foundation
 ///
 ///     xcrun simctl launch booted dev.kremen.transport -openPicker
 ///     xcrun simctl launch booted dev.kremen.transport -openStop 305
+///     xcrun simctl launch booted dev.kremen.transport -openSettings
 ///
 /// DEBUG-only and inert unless the argument is passed.
 enum DebugLaunch {
     static var opensPicker: Bool {
         ProcessInfo.processInfo.arguments.contains("-openPicker")
+    }
+
+    static var opensSettings: Bool {
+        ProcessInfo.processInfo.arguments.contains("-openSettings")
     }
 
     static var stopToOpen: Int? {

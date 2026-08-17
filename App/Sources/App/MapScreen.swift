@@ -6,6 +6,7 @@ struct MapScreen: View {
     let transport: TransportStore
     let vehicles: VehicleFeed
     @Bindable var selection: SelectionStore
+    let settings: SettingsStore
     let location: LocationProvider
 
     @Environment(\.scenePhase) private var scenePhase
@@ -16,6 +17,7 @@ struct MapScreen: View {
     @State private var target: MapTarget?
     @State private var highlightedRouteID: Int?
     @State private var isPickerPresented = false
+    @State private var isSettingsPresented = false
     @State private var isLocationDeniedAlertPresented = false
     @State private var pendingRecenter = false
 
@@ -39,11 +41,15 @@ struct MapScreen: View {
             }
         )
         .ignoresSafeArea()
+        .overlay(alignment: .topLeading) { settingsButton }
         .overlay(alignment: .topTrailing) { statusChip }
         .overlay(alignment: .trailing) { zoomStepper }
         .safeAreaInset(edge: .bottom) { bottomBar }
         .sheet(isPresented: $isPickerPresented) {
             RoutePickerView(routes: transport.sortedRoutes, selection: selection)
+        }
+        .sheet(isPresented: $isSettingsPresented) {
+            SettingsSheet(settings: settings)
         }
         .sheet(item: selectedStop) { stop in
             StationSheet(
@@ -61,7 +67,7 @@ struct MapScreen: View {
             )
         }
         .alert("location.denied.title", isPresented: $isLocationDeniedAlertPresented) {
-            Button("location.denied.settings") { openSettings() }
+            Button("location.denied.settings") { SystemSettings.openAppSettings() }
             Button("common.cancel", role: .cancel) {}
         } message: {
             Text("location.denied.message")
@@ -97,6 +103,18 @@ struct MapScreen: View {
     }
 
     // MARK: - Chrome
+
+    private var settingsButton: some View {
+        FloatingSurface {
+            MapIconButton(
+                systemName: "gearshape.fill",
+                labelKey: "map.control.settings",
+                action: { isSettingsPresented = true }
+            )
+        }
+        .padding(.leading, 16)
+        .padding(.top, 8)
+    }
 
     private var statusChip: some View {
         ConnectionChip(lastUpdate: vehicles.lastUpdate, isFailing: vehicles.isFailing)
@@ -200,13 +218,9 @@ struct MapScreen: View {
             )
         }
         if DebugLaunch.opensPicker { isPickerPresented = true }
+        if DebugLaunch.opensSettings { isSettingsPresented = true }
         if let sid = DebugLaunch.stopToOpen { target = .stop(sid) }
         #endif
-    }
-
-    private func openSettings() {
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url)
     }
 
     // MARK: - Data

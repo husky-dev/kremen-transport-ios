@@ -86,6 +86,40 @@ final class SelectionStoreTests: XCTestCase {
     }
 }
 
+final class SettingsStoreTests: XCTestCase {
+    private func makeDefaults(_ name: String = UUID().uuidString) -> UserDefaults {
+        UserDefaults(suiteName: name)!
+    }
+
+    @MainActor
+    func testDefaultsToSystemAppearance() {
+        let store = SettingsStore(defaults: makeDefaults())
+        XCTAssertEqual(store.appearance, .system)
+    }
+
+    @MainActor
+    func testPersistsAcrossInstances() {
+        let defaults = makeDefaults()
+        SettingsStore(defaults: defaults).appearance = .dark
+
+        let reloaded = SettingsStore(defaults: defaults)
+        XCTAssertEqual(reloaded.appearance, .dark)
+    }
+
+    @MainActor
+    func testFallsBackToSystemOnAnUnknownStoredValue() {
+        let defaults = makeDefaults()
+        defaults.set("sepia", forKey: "settings.appearance.v1")
+        XCTAssertEqual(SettingsStore(defaults: defaults).appearance, .system)
+    }
+
+    func testMapsToColorScheme() {
+        XCTAssertNil(AppearancePreference.system.colorScheme)
+        XCTAssertEqual(AppearancePreference.light.colorScheme, .light)
+        XCTAssertEqual(AppearancePreference.dark.colorScheme, .dark)
+    }
+}
+
 final class FormattersTests: XCTestCase {
     func testEtaRoundsMinutesUp() {
         XCTAssertEqual(Formatters.eta(seconds: 61).filter(\.isNumber), "2")
