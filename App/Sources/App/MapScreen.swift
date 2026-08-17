@@ -39,7 +39,7 @@ struct MapScreen: View {
             }
         )
         .ignoresSafeArea()
-        .overlay(alignment: .topLeading) { statusChip }
+        .overlay(alignment: .topTrailing) { statusChip }
         .overlay(alignment: .trailing) { zoomStepper }
         .safeAreaInset(edge: .bottom) { bottomBar }
         .sheet(isPresented: $isPickerPresented) {
@@ -99,8 +99,8 @@ struct MapScreen: View {
     // MARK: - Chrome
 
     private var statusChip: some View {
-        FreshnessChip(lastUpdate: vehicles.lastUpdate, isFailing: vehicles.isFailing)
-            .padding(.leading, 16)
+        ConnectionChip(lastUpdate: vehicles.lastUpdate, isFailing: vehicles.isFailing)
+            .padding(.trailing, 16)
             .padding(.top, 8)
     }
 

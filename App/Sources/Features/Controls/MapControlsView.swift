@@ -89,28 +89,45 @@ struct RoutesPill: View {
     }
 }
 
-/// A quiet freshness indicator. It fades out once you've read it, and turns amber when polls
-/// start failing — so "nothing is moving" is never ambiguous.
-struct FreshnessChip: View {
+/// A binary liveness indicator: green while data is arriving, red once it stops — so "nothing
+/// is moving" is never ambiguous. The exact age of the last poll is detail nobody asked for.
+struct ConnectionChip: View {
     let lastUpdate: Date?
     let isFailing: Bool
+
+    /// Positions poll every 5 s; three missed ticks is a stall worth showing.
+    private static let staleAfter: TimeInterval = 15
 
     @State private var now = Date()
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
+    private var isOnline: Bool {
+        guard !isFailing, let lastUpdate else { return false }
+        return now.timeIntervalSince(lastUpdate) <= Self.staleAfter
+    }
+
     var body: some View {
         FloatingSurface(shape: AnyInsettableShape(Capsule())) {
-            HStack(spacing: 5) {
-                Image(systemName: isFailing ? "wifi.exclamationmark" : "dot.radiowaves.up.forward")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(Formatters.freshness(since: lastUpdate, now: now))
-                    .font(.system(size: 12, weight: .medium))
-                    .monospacedDigit()
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(isOnline ? Color.green : Color.red)
+                    .frame(width: 8, height: 8)
+                // Both labels are laid out and one is hidden, so the chip keeps a single width
+                // in every locale and at every Dynamic Type size instead of jumping on a flip.
+                ZStack {
+                    Text("map.status.online").hidden()
+                    Text("map.status.disconnected").hidden()
+                    Text(isOnline ? "map.status.online" : "map.status.disconnected")
+                }
+                .font(.system(size: 12, weight: .medium))
+                .fixedSize()
+                .foregroundStyle(.secondary)
             }
-            .foregroundStyle(isFailing ? Color.orange : Color.secondary)
             .padding(.horizontal, 11)
             .frame(height: 28)
         }
         .onReceive(tick) { now = $0 }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(isOnline ? "map.status.online" : "map.status.disconnected"))
     }
 }
