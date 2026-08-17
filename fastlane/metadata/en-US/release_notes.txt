@@ -1,1 +1,2 @@
-
+• Refreshed design following the latest iOS guidelines.
+• Bug fixes and stability improvements.
