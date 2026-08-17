@@ -172,6 +172,24 @@ ls "$APP"/*.lproj/                       # expect Localizable.strings + .strings
 plutil -p "$APP/uk.lproj/InfoPlist.strings"
 ```
 
+## App Store listing (fastlane)
+
+The store text lives in the repo, next to the app's own localizations:
+
+```sh
+make metadata        # download the live listing into fastlane/metadata
+make metadata-push   # upload fastlane/metadata back (no binary, no screenshots)
+make screenshots     # download the current screenshots
+```
+
+`fastlane` comes from Homebrew (`brew install fastlane`), so no Gemfile or bundler here.
+Auth is an App Store Connect API key described by `fastlane/private/asc_key.json`
+(see `fastlane/asc_key.json.example`); `fastlane/private/` is git-ignored, as is
+`fastlane/metadata/review_information/` — it holds reviewer contact details.
+
+`fastlane/metadata/<locale>/*.txt` is one string per file, so a listing change reads as a diff.
+Locales are App Store codes (`uk`, `en-US`), not the app's `uk`/`en` bundle locales.
+
 ## Release notes
 
 - Bundle `dev.kremen.transport`, `DEVELOPMENT_TEAM` `BLVWV6S9PP`, marketing version 1.5.

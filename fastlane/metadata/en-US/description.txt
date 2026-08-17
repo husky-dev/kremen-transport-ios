@@ -1,0 +1,1 @@
+The app will help you track buses, trolleybuses, and minibusses of Kremenchuk. You can find out the time of arrival of transport to the bus stop and display only routes you need to

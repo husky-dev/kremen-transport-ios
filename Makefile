@@ -8,7 +8,7 @@ IPAD    := iPad Pro 13-inch (M4)
 DD      := build
 APP     := $(DD)/Build/Products/Debug-iphonesimulator/KremenTransport.app
 
-.PHONY: gen build test run run-ipad clean lint
+.PHONY: gen build test run run-ipad clean lint metadata metadata-push screenshots
 
 gen:
 	xcodegen generate --spec project.yml
@@ -37,3 +37,13 @@ run-ipad: build
 
 clean:
 	rm -rf $(DD) $(PROJECT) App/Supporting/Info.plist
+
+# App Store listing text, mirrored into fastlane/metadata (see fastlane/Fastfile)
+metadata:
+	fastlane metadata_pull
+
+metadata-push:
+	fastlane metadata_push
+
+screenshots:
+	fastlane screenshots_pull

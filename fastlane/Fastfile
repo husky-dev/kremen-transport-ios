@@ -1,0 +1,50 @@
+default_platform(:ios)
+opt_out_usage
+
+# App Store Connect API key, kept out of the repo. Create one under
+# Users and Access -> Integrations -> App Store Connect API (role: App Manager),
+# then drop the .p8 next to a small json describing it:
+#
+#   fastlane/private/AuthKey_XXXXXXXXXX.p8
+#   fastlane/private/asc_key.json   { "key_id", "issuer_id", "key_filepath" }
+#
+# Both are git-ignored. An Apple ID login would work too, but its 2FA prompt
+# breaks any non-interactive run.
+ASC_KEY_PATH = File.expand_path("private/asc_key.json", __dir__)
+
+def asc_key_path!
+  UI.user_error!("Missing #{ASC_KEY_PATH} — see the comment at the top of the Fastfile") unless File.exist?(ASC_KEY_PATH)
+  ASC_KEY_PATH
+end
+
+platform :ios do
+  desc "Download the App Store listing (name, subtitle, description, keywords, release notes) into fastlane/metadata"
+  lane :metadata_pull do
+    # deliver only exposes downloading through its CLI, not through an action.
+    # --force answers its "overwrite existing metadata?" prompt; without a tty it
+    # otherwise exits 0 having written nothing. Overwriting is safe — this is git.
+    Dir.chdir("..") do
+      sh("fastlane", "deliver", "download_metadata", "--force", "--api_key_path", asc_key_path!)
+    end
+  end
+
+  desc "Upload fastlane/metadata back to App Store Connect (no binary, no screenshots)"
+  lane :metadata_push do
+    deliver(
+      api_key_path: asc_key_path!,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_app_version_update: true,
+      # The metadata was already reviewed as a git diff; no HTML preview prompt.
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Download the current App Store screenshots into fastlane/screenshots"
+  lane :screenshots_pull do
+    Dir.chdir("..") do
+      sh("fastlane", "deliver", "download_screenshots", "--api_key_path", asc_key_path!)
+    end
+  end
+end

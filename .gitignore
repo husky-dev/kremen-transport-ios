@@ -7,6 +7,16 @@ DerivedData/
 xcuserdata/
 *.xcuserstate
 
+# fastlane
+# App Store Connect API key (.p8 + asc_key.json)
+fastlane/private/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+fastlane/README.md
+# reviewer contact details and any demo credentials — not for the repo
+fastlane/metadata/review_information/
+
 # macOS
 .DS_Store
 
