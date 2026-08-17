@@ -74,8 +74,8 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
-        UILaunchScreen:
-          UIColorName: LaunchBackground
+        # Storyboard, not a UILaunchScreen dict: only the storyboard can pin the glyph size.
+        UILaunchStoryboardName: LaunchScreen
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

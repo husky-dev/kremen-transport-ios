@@ -182,6 +182,41 @@ plutil -p "$APP/uk.lproj/InfoPlist.strings"
   alpha channel, which fails App Store upload validation — keep any replacement opaque.
 - `PrivacyInfo.xcprivacy` declares `UserDefaults` (`CA92.1`) and file timestamps (`C617.1`).
 
+## Launch screen
+
+`App/Resources/LaunchScreen.storyboard` (wired by `UILaunchStoryboardName` in `project.yml`) draws
+`LaunchBus` at a fixed 140×140 pt over `LaunchBackground`: a white bus on brand blue `#3E7FE8` in
+light, a `#3E7FE8` bus on black in dark. Four things about it are load-bearing:
+
+- **Storyboard, not the `UILaunchScreen` plist dict.** `UILaunchScreen.UIImageName` renders the
+  image full-bleed aspect-fit; only the storyboard can pin the glyph size.
+- **Both variants come from appearance-qualified assets**, since a storyboard cannot express an
+  adaptive literal colour: `LaunchBackground.colorset` and `LaunchBus.imageset` each carry a
+  `luminosity: dark` entry. The storyboard also archives a fallback colour for the named colour —
+  keep it in step with the colorset's light value.
+- `LaunchBus` sets `template-rendering-intent: original`. The light glyph is pure white, which the
+  catalog compiles to a greyscale mask; without that key it is treated as a template and tinted
+  system blue.
+- The PNGs are rendered from `AppIcon.icon/Assets/Bus.svg` (recoloured for the dark variant) with
+  the icon's padding cropped off, at 140/280/420 px.
+
+**Verifying it is painful and misleading — read this before debugging a wrong-looking launch
+screen.** SpringBoard rejects the launch storyboard of an unsigned build (`make build` passes
+`CODE_SIGNING_ALLOWED=NO`) and shows plain black instead — the log says
+`Resource validation error: Security error -67056`. Worse, a simulator caches an app's launch
+assets by bundle id in a way that survives uninstall, reinstall and `CFBundleVersion` bumps, so a
+simulator that ran an older build keeps painting the *old* colours forever. To actually see a
+change:
+
+```sh
+codesign --force --deep --sign - build/Build/Products/Debug-iphonesimulator/KremenTransport.app
+xcrun simctl create LaunchProbe "iPhone 17 Pro"   # a device that has never seen the app
+```
+
+then boot it, install, launch, and screenshot in a tight loop (`xcrun simctl io <id> screenshot`) —
+the launch screen is on screen for well under a second. Delete the probe device afterwards. To hold
+the launch screen still, add a temporary `Thread.sleep` to `KremenTransportApp.init()`.
+
 ## Tests
 
 `Tests/Fixtures/*.sample.json` are real payloads captured from the live API. `DecodingTests`
