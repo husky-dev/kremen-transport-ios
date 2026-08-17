@@ -1,0 +1,33 @@
+{
+  "fill": {
+    "solid": "display-p3:0.24314,0.49804,0.90980,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "Bus.svg",
+          "name": "Bus"
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": [
+      "iOS",
+      "macOS"
+    ]
+  }
+}
