@@ -14,10 +14,26 @@ struct StationSheet: View {
     @State private var feed: PredictionFeed
     @State private var scope: Scope = .selected
     @State private var now = Date()
+    @State private var detent: PresentationDetent = Self.initialDetent
 
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     /// The backend recomputes arrivals every 10 s; polling faster only burns battery.
     private static let pollInterval = Duration.seconds(5)
+    /// Small enough to keep the map readable behind it — you arrive here by tapping that map.
+    private static let compactDetent = PresentationDetent.height(340)
+
+    /// Normally the compact card; `-stopDetent` opens it taller for an App Store capture.
+    private static var initialDetent: PresentationDetent {
+        #if DEBUG
+        switch DebugLaunch.stopDetent {
+        case "medium": return .medium
+        case "large": return .large
+        default: return compactDetent
+        }
+        #else
+        compactDetent
+        #endif
+    }
 
     private enum Scope: Hashable, CaseIterable {
         case selected, all
@@ -44,7 +60,7 @@ struct StationSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .safeAreaInset(edge: .top, spacing: 0) { header }
         }
-        .presentationDetents([.height(340), .medium, .large])
+        .presentationDetents([Self.compactDetent, .medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(28)
         // A plain list draws no background of its own; without an explicit opaque colour the

@@ -59,11 +59,18 @@ blocked). Debug builds therefore accept launch arguments that open a screen dire
 xcrun simctl launch booted dev.kremen.transport -openPicker
 xcrun simctl launch booted dev.kremen.transport -openStop 305
 xcrun simctl launch booted dev.kremen.transport -cameraDistance 2200
+xcrun simctl launch booted dev.kremen.transport -cameraCenter 49.0975,33.4216
+xcrun simctl launch booted dev.kremen.transport -selectRoutes 2,6,7,14,20,27
+xcrun simctl launch booted dev.kremen.transport -openStop 305 -stopDetent medium
 xcrun simctl launch booted dev.kremen.transport -AppleLanguages '(uk)' -AppleLocale uk_UA
 xcrun simctl io booted screenshot shot.png
 ```
 
 Set a location with `xcrun simctl location booted set 49.07041,33.42282`.
+
+`-fixtures` additionally serves captured payloads from `Documents/ScreenshotFixtures/` in the app
+container instead of the network (`APIClient.fixture(for:)`), which pins exactly what is on
+screen. It is what makes the App Store captures reproducible; see the screenshots section below.
 
 ## API
 
@@ -180,6 +187,7 @@ The store text lives in the repo, next to the app's own localizations:
 make metadata        # download the live listing into fastlane/metadata
 make metadata-push   # upload fastlane/metadata back (no binary, no screenshots)
 make screenshots     # download the current screenshots
+make screenshots-gen # capture a fresh set locally (does not upload)
 ```
 
 `fastlane` comes from Homebrew (`brew install fastlane`), so no Gemfile or bundler here.
@@ -189,6 +197,30 @@ Auth is an App Store Connect API key described by `fastlane/private/asc_key.json
 
 `fastlane/metadata/<locale>/*.txt` is one string per file, so a listing change reads as a diff.
 Locales are App Store codes (`uk`, `en-US`), not the app's `uk`/`en` bundle locales.
+
+### Screenshots
+
+`make screenshots-gen` writes 12 PNGs — 3 screens x 2 devices x 2 locales — into
+`fastlane/screenshots/<locale>/`, which is the layout `deliver` expects (it infers the device
+from the pixel size). It never uploads; pushing them is a separate deliberate step.
+
+App Store Connect requires the **6.9" iPhone** (1320x2868, iPhone 17 Pro Max) and, since
+`TARGETED_DEVICE_FAMILY` is `1,2`, the **13" iPad** (2064x2752), and scales those down for
+smaller devices. The Makefile's `SIM` is a 6.3" iPhone and would be rejected — `Scripts/
+screenshots.sh` names its own devices.
+
+Three things about the run are load-bearing:
+
+- **`-fixtures`, not the live API.** Otherwise the uk and en-US capture of one screen show
+  different buses at different places, which reads as sloppy when a reviewer sees both listings.
+  `Scripts/make_screenshot_fixtures.py` derives the payloads from `Tests/Fixtures/`; they are
+  copied into the app container, never into the bundle, so nothing reaches Release.
+- **The arrivals fixture has to be curated.** `StationSheet.visible` filters to the selected
+  routes, and the captured predictions for stop 305 are on rids no sane selection contains — the
+  sheet would render "Немає прогнозів". The generator also thins same-route vehicles that would
+  otherwise draw as a stack of overlapping badges at a terminus.
+- **The first launch after `erase` is thrown away.** A newly erased device posts a "Ready for
+  Apple Intelligence" banner across the top of the screen; the warm-up launch lets it expire.
 
 ## Release notes
 

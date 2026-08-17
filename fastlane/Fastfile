@@ -41,6 +41,23 @@ platform :ios do
     )
   end
 
+  desc "Upload fastlane/screenshots to App Store Connect (no binary, no metadata)"
+  lane :screenshots_push do
+    deliver(
+      api_key_path: asc_key_path!,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      # Replace rather than add. The listing still carried the 1.4 app's screenshots in device
+      # slots the current set does not cover, so without this the store would show two different
+      # apps depending on the viewer's device.
+      overwrite_screenshots: true,
+      # Reviewed as local PNGs already; no HTML preview prompt, and precheck only reads metadata.
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+
   desc "Download the current App Store screenshots into fastlane/screenshots"
   lane :screenshots_pull do
     Dir.chdir("..") do

@@ -212,9 +212,13 @@ struct MapScreen: View {
 
     private func applyDebugLaunchArguments() {
         #if DEBUG
+        if let ids = DebugLaunch.routesToSelect { selection.replace(with: ids) }
         if let distance = DebugLaunch.cameraDistance {
             position = .camera(
-                MapCamera(centerCoordinate: MapGeometry.cityCenter, distance: distance)
+                MapCamera(
+                    centerCoordinate: DebugLaunch.cameraCenter ?? MapGeometry.cityCenter,
+                    distance: distance
+                )
             )
         }
         if DebugLaunch.opensPicker { isPickerPresented = true }

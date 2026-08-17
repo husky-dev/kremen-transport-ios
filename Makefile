@@ -4,11 +4,11 @@ PROJECT := KremenTransport.xcodeproj
 SCHEME  := KremenTransport
 BUNDLE  := dev.kremen.transport
 SIM     := iPhone 17 Pro
-IPAD    := iPad Pro 13-inch (M4)
+IPAD    := iPad Pro 13-inch (M5)
 DD      := build
 APP     := $(DD)/Build/Products/Debug-iphonesimulator/KremenTransport.app
 
-.PHONY: gen build test run run-ipad clean lint metadata metadata-push screenshots
+.PHONY: gen build test run run-ipad clean lint metadata metadata-push screenshots screenshots-gen screenshots-push
 
 gen:
 	xcodegen generate --spec project.yml
@@ -47,3 +47,12 @@ metadata-push:
 
 screenshots:
 	fastlane screenshots_pull
+
+# Capture the App Store set locally (3 screens x 2 devices x 2 locales). Uploading stays a
+# separate, deliberate step — this only writes fastlane/screenshots/.
+screenshots-gen: build
+	Scripts/screenshots.sh
+
+# Replaces every screenshot on the live listing with fastlane/screenshots.
+screenshots-push:
+	fastlane screenshots_push

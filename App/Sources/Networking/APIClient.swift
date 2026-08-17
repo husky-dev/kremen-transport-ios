@@ -60,6 +60,12 @@ actor APIClient {
 
     /// Fetches routes, honouring `If-None-Match` / `If-Modified-Since`. Returns `nil` on 304.
     func fetchRoutesIfChanged(cached: CachedPayload?) async throws -> CachedPayload? {
+        #if DEBUG
+        if let data = Self.fixture(for: .routes) {
+            return CachedPayload(data: data, etag: nil, lastModified: nil)
+        }
+        #endif
+
         var request = URLRequest(url: APIEndpoint.routes.url)
         if let etag = cached?.etag { request.setValue(etag, forHTTPHeaderField: "If-None-Match") }
         if let modified = cached?.lastModified {
@@ -87,6 +93,15 @@ actor APIClient {
     // MARK: - Plumbing
 
     private func load(_ endpoint: APIEndpoint) async throws -> (Data, HTTPURLResponse) {
+        #if DEBUG
+        if let data = Self.fixture(for: endpoint) {
+            let response = HTTPURLResponse(
+                url: endpoint.url, statusCode: 200, httpVersion: nil, headerFields: nil
+            )!
+            return (data, response)
+        }
+        #endif
+
         var request = URLRequest(url: endpoint.url)
         if endpoint.bypassesCache { request.cachePolicy = .reloadIgnoringLocalCacheData }
         let (data, response) = try await perform(request)
@@ -120,3 +135,30 @@ actor APIClient {
 private extension APIEndpoint {
     var url: URL { APIClient.baseURL.appendingPathComponent(path) }
 }
+
+#if DEBUG
+extension APIClient {
+    /// Screenshot mode (`-fixtures`): serve payloads written into the app container by
+    /// `Scripts/screenshots.sh`, so two captures of one screen in two languages are identical.
+    ///
+    /// The files live in `Documents/`, not the bundle — 660 KB of sample JSON has no business
+    /// in the app target, and nothing here can survive into a Release build.
+    static func fixture(for endpoint: APIEndpoint) -> Data? {
+        guard DebugLaunch.usesFixtures else { return nil }
+        let name = switch endpoint {
+        case .routes: "routes"
+        case .buses: "buses"
+        case .locations: "locations"
+        case .prediction: "prediction"
+        }
+        guard let documents = FileManager.default.urls(
+            for: .documentDirectory, in: .userDomainMask
+        ).first else { return nil }
+        let url = documents
+            .appendingPathComponent("ScreenshotFixtures", isDirectory: true)
+            .appendingPathComponent(name)
+            .appendingPathExtension("json")
+        return try? Data(contentsOf: url)
+    }
+}
+#endif
