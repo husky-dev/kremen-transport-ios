@@ -1,0 +1,14 @@
+# Xcode / generated
+*.xcodeproj
+*.xcworkspace
+App/Supporting/Info.plist
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# macOS
+.DS_Store
+
+# Misc
+*.log

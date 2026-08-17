@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Транспорт";
+"CFBundleName" = "Транспорт";
+"NSLocationWhenInUseUsageDescription" = "Щоб показати ваше місце на карті та знайти найближчі зупинки.";
